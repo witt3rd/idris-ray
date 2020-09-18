@@ -30,3 +30,33 @@ savePPM {n = (S height)} {m = width} filename image =
       do
         saveRow file row
         saveRows file rows
+
+export
+mkTestImage : (h : Nat) -> (w : Nat) -> Matrix h w Color
+mkTestImage h w = mkRows h
+  where
+    mkCols : (x : Nat) -> (y : Nat) -> Vect x Color
+    mkCols Z _ = Nil
+    mkCols (S x) y =
+      let
+        r : Double = (cast x) / (cast w)
+        g : Double = (cast y) / (cast h)
+        b : Double = 0.25
+      in
+        (RGB r g b) :: mkCols x y
+
+    mkRows : (y : Nat) -> Matrix y w Color
+    mkRows Z = Nil
+    mkRows (S y) =
+      let
+        y' : Nat = minus (minus h 1) y
+      in
+        (mkCols w y') :: mkRows y
+
+export
+foo : Nat -> Nat -> IO ()
+foo Z _ = pure ()
+foo (S k) h = do
+  let y : Nat = minus (minus h 1) k
+  putStrLn $ printf "k:%d h:%d y:%d" (cast k) (cast h) (cast y)
+  foo k h
