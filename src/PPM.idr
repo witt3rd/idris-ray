@@ -11,7 +11,7 @@ savePPM {n = (S height)} {m = width} filename image =
   do
     Right file <- openFile filename WriteTruncate
     fPutStrLn file "P3"
-    fPutStrLn file $ printf "%d %d" (cast width) ((cast height) - 1)
+    fPutStrLn file $ printf "%d %d" (cast width) ((cast height) + 1)
     fPutStrLn file "255"
     saveRows file image
   where
@@ -23,6 +23,7 @@ savePPM {n = (S height)} {m = width} filename image =
         let ig : Int = cast (255.99 * g)
         let ib : Int = cast (255.99 * b)
         fPutStrLn file $ printf "%d %d %d" ir ig ib
+        saveRow file xs
 
     saveRows : File -> (image : Matrix n m Color) -> IO (Either FileError ())
     saveRows file [] = pure $ Right ()
@@ -35,28 +36,17 @@ export
 mkTestImage : (h : Nat) -> (w : Nat) -> Matrix h w Color
 mkTestImage h w = mkRows h
   where
-    mkCols : (x : Nat) -> (y : Nat) -> Vect x Color
+    mkCols : (i : Nat) -> (j : Nat) -> Vect i Color
     mkCols Z _ = Nil
-    mkCols (S x) y =
+    mkCols (S i) j =
       let
-        r : Double = (cast x) / (cast w)
-        g : Double = (cast y) / (cast h)
+        i' : Nat = minus w (plus i 1)
+        r : Double = (cast i') / (cast (minus w 1))
+        g : Double = (cast j) / (cast (minus h 1))
         b : Double = 0.25
       in
-        (RGB r g b) :: mkCols x y
+        (RGB r g b) :: mkCols i j
 
-    mkRows : (y : Nat) -> Matrix y w Color
+    mkRows : (j : Nat) -> Matrix j w Color
     mkRows Z = Nil
-    mkRows (S y) =
-      let
-        y' : Nat = minus (minus h 1) y
-      in
-        (mkCols w y') :: mkRows y
-
-export
-foo : Nat -> Nat -> IO ()
-foo Z _ = pure ()
-foo (S k) h = do
-  let y : Nat = minus (minus h 1) k
-  putStrLn $ printf "k:%d h:%d y:%d" (cast k) (cast h) (cast y)
-  foo k h
+    mkRows (S j) = (mkCols w j) :: mkRows j
