@@ -7,11 +7,11 @@ import Printf
 
 export
 savePPM : (filepath : String) -> (image : Matrix n m Color) -> IO (Either FileError ())
-savePPM {n = (S height)} {m = width} filename image =
+savePPM {n = height} {m = width} filename image =
   do
     Right file <- openFile filename WriteTruncate
     fPutStrLn file "P3"
-    fPutStrLn file $ printf "%d %d" (cast width) ((cast height) + 1)
+    fPutStrLn file $ printf "%d %d" (cast width) (cast height)
     fPutStrLn file "255"
     saveRows file image
   where
