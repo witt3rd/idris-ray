@@ -43,7 +43,5 @@ len = (sqrt . lenSq)
 
 unitVector : Vec3 -> Vec3
 unitVector v =
-  let
-    l : Double = len v
-  in
-    if l == 0.0 then v else map (/ l) v
+  let l : Double = len v in
+  if l == 0.0 then v else map (/ l) v

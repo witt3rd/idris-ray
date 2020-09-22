@@ -2,6 +2,8 @@ module Main
 
 import PPM
 import Ray
+import Sphere
+import Util
 
 {- Image -}
 aspectRatio : Double
@@ -41,33 +43,27 @@ vertical = [0, viewportHeight, 0];
 lowerLeftCorner : Vec3
 lowerLeftCorner = origin - (0.5 <# horizontal) - (0.5 <# vertical) - [0, 0, focalLength]
 
-{- Helpers -}
-hitSphere : (center: Point3) -> (radius : Double) -> Ray -> Double
-hitSphere center radius (MkRay origin dir) =
-  let
-    oc : Vec3 = origin - center
-    a : Double = dot dir dir
-    b : Double = 2.0 * dot oc dir
-    c : Double = (dot oc oc) - (radius * radius)
-    discriminant : Double = (b * b) - (4 * a * c)
-  in
-    if discriminant < 0 then
-      -1
-    else
-      ((0 - b) - (sqrt discriminant)) / (2*a)
+{- World -}
+s1 : Sphere
+s1 = MkSphere [0, 0, -1] 0.5
 
-rayColor : Ray -> Color
-rayColor r@(MkRay origin dir) =
-  let t : Double = hitSphere [0,0,-1] 0.5 r in
-  if t > 0 then
-    let N : Vec3 = unitVector ((rayAt r t) - [0, 0, -1]) in
-    0.5 <# [(getX N) + 1, (getY N) + 1, (getZ N) + 1]
-  else
-    let
-      unitDir : Vec3 = unitVector dir
-      t : Double = 0.5 * (getY unitDir) + 1
-    in
-      ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
+s2 : Sphere
+s2 = MkSphere [0, -100.5, -1] 100
+
+world : List Sphere
+world = [s1, s2]
+
+{- Helpers -}
+rayColor : Hittable a => Ray -> List a -> Color
+rayColor ray@(MkRay origin dir) world =
+  case closestHit ray 0 infinity world of
+    Just (MkHit _ normal _ _) => 0.5 <# (normal + [1, 1, 1])
+    Nothing =>
+      let
+        unitDir : Vec3 = unitVector dir
+        t : Double = 0.5 * (getY unitDir) + 1
+      in
+        ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
 
 {- Render loop -}
 render : (h : Nat) -> (w : Nat) -> IO (Matrix h w RGB)
@@ -83,7 +79,7 @@ render h w = mkRows h
         uh : Vec3 = u <# horizontal
         vv : Vec3 = v <# vertical
         r : Ray = MkRay origin (lowerLeftCorner + uh + vv - origin)
-        c : Color = rayColor r
+        c : Color = rayColor r world
       in
         (toRGB c) :: mkCols i j
 
