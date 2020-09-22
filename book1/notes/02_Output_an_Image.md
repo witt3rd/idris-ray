@@ -199,6 +199,8 @@ idris --build ray.ipkg
 ./ray
 ```
 
+#### Image 1: Our First Image
+
 ![Our First Image](images/Image_01.png)
 
 ## 2.3 Adding a Progress Indicator

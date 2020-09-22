@@ -343,4 +343,5 @@ render h w = mkRows h
 
 Confirm that you are still able to generate the image from chapter 2:
 
+#### Image 1b: Binary test image
 ![Binary test image](images/Image_01b.png)
