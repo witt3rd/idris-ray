@@ -1,34 +1,49 @@
 module PPM
 
-import public Data.Matrix
-import public Data.Vect
+import Data.Buffer
 
 import Printf
+import public Color
 
 %access public export
 
-savePPM : (filepath : String) -> (image : Matrix n m (Vect 3 Double)) -> IO (Either FileError ())
+bytesPerPixel : Int
+bytesPerPixel = 3
+
+savePPM : (filename : String) -> (image : Matrix n m RGB) -> IO (Either String ())
 savePPM {n = height} {m = width} filename image =
   do
-    Right file <- openFile filename WriteTruncate
-    fPutStrLn file "P3"
-    fPutStrLn file $ printf "%d %d" (cast width) (cast height)
-    fPutStrLn file "255"
-    saveRows file image
+    let header : String = mkHeader height width
+    let headerSize : Int = cast (length header)
+    let size : Int = headerSize + ((cast (height * width)) * bytesPerPixel)
+    Just buf <- newBuffer size | Nothing => pure (Left "Unable to allocate buffer")
+    setString buf 0 header
+    Right file <- openFile filename WriteTruncate | Left err => pure (Left (show err))
+    saveRows buf headerSize image
+    writeBufferToFile file buf size
+    closeFile file
+    pure (Right ())
   where
-    saveRow : File -> (row : Vect n (Vect 3 Double)) -> IO (Either FileError ())
-    saveRow _ [] = pure $ Right ()
-    saveRow file (color :: xs) =
-      do
-        let ir : Int = cast (255.99 * (index 0 color))
-        let ig : Int = cast (255.99 * (index 1 color))
-        let ib : Int = cast (255.99 * (index 2 color))
-        fPutStrLn file $ printf "%d %d %d" ir ig ib
-        saveRow file xs
+    mkHeader : (h : Nat) -> (w : Nat) -> String
+    mkHeader h w = printf "P6\n%d %d\n255\n" (cast w) (cast h)
 
-    saveRows : File -> (image : Matrix n m (Vect 3 Double)) -> IO (Either FileError ())
-    saveRows file [] = pure $ Right ()
-    saveRows file (row :: rows) =
+    saveBytes : Buffer -> Int -> Vect n Bits8 -> IO ()
+    saveBytes _ _ [] = pure ()
+    saveBytes buf loc (b :: bs) =
       do
-        saveRow file row
-        saveRows file rows
+        setByte buf loc b
+        saveBytes buf (loc + 1) bs
+
+    saveRow : Buffer -> Int -> Vect n RGB -> IO ()
+    saveRow _ _ [] = pure ()
+    saveRow buf loc (c :: xs) =
+      do
+        saveBytes buf loc c
+        saveRow buf (loc + bytesPerPixel) xs
+
+    saveRows : Buffer -> Int -> Matrix n m RGB -> IO ()
+    saveRows _ _ [] = pure ()
+    saveRows buf loc (row :: rows) =
+      do
+        saveRow buf loc row
+        saveRows buf (loc + bytesPerPixel * (toIntNat width)) rows

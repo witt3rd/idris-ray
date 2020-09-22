@@ -2,10 +2,10 @@ module Main
 
 import PPM
 
-render : (h : Nat) -> (w : Nat) -> IO (Matrix h w (Vect 3 Double))
+render : (h : Nat) -> (w : Nat) -> IO (Matrix h w RGB)
 render h w = mkRows h
   where
-    mkCols : (i : Nat) -> (j : Nat) -> Vect i (Vect 3 Double)
+    mkCols : (i : Nat) -> (j : Nat) -> Vect i RGB
     mkCols Z _ = Nil
     mkCols (S i) j =
       let
@@ -14,9 +14,9 @@ render h w = mkRows h
         g : Double = (cast j) / (cast (minus h 1))
         b : Double = 0.25
       in
-        [r, g, b] :: mkCols i j
+        (toRGB [r, g, b]) :: mkCols i j
 
-    mkRows : (j : Nat) -> IO (Matrix j w (Vect 3 Double))
+    mkRows : (j : Nat) -> IO (Matrix j w RGB)
     mkRows Z = pure (Nil)
     mkRows (S j) = do
       rows <- mkRows j
