@@ -1,16 +1,11 @@
 module Main
 
-import Data.Matrix
-
-import Color
 import PPM
-import Printf
 
-export
-render : (h : Nat) -> (w : Nat) -> IO (Matrix h w Color)
+render : (h : Nat) -> (w : Nat) -> IO (Matrix h w (Vect 3 Double))
 render h w = mkRows h
   where
-    mkCols : (i : Nat) -> (j : Nat) -> Vect i Color
+    mkCols : (i : Nat) -> (j : Nat) -> Vect i (Vect 3 Double)
     mkCols Z _ = Nil
     mkCols (S i) j =
       let
@@ -19,18 +14,17 @@ render h w = mkRows h
         g : Double = (cast j) / (cast (minus h 1))
         b : Double = 0.25
       in
-        (RGB r g b) :: mkCols i j
+        [r, g, b] :: mkCols i j
 
-    mkRows : (j : Nat) -> IO (Matrix j w Color)
+    mkRows : (j : Nat) -> IO (Matrix j w (Vect 3 Double))
     mkRows Z = pure (Nil)
     mkRows (S j) = do
-      putStrLn $ printf "Scanlines remaining: %d" (cast j)
       rows <- mkRows j
       pure ((mkCols w j) :: rows)
 
 main : IO ()
 main = do
-  putStrLn "generating image..."
+  putStrLn "Rendring..."
   image <- render 255 255
   savePPM "test.ppm" image
-  putStrLn "image saved"
+  putStrLn "Done!"

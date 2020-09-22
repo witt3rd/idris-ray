@@ -4,8 +4,6 @@ pkgs = contrib
 
 sourcedir = src
 
-modules = PPM
-
 main = Main
 
 executable = ray
