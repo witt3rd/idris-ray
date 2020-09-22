@@ -42,7 +42,7 @@ lowerLeftCorner : Vec3
 lowerLeftCorner = origin - (0.5 <# horizontal) - (0.5 <# vertical) - [0, 0, focalLength]
 
 {- Helpers -}
-hitSphere : (center: Point3) -> (radius : Double) -> Ray -> Bool
+hitSphere : (center: Point3) -> (radius : Double) -> Ray -> Double
 hitSphere center radius (MkRay origin dir) =
   let
     oc : Vec3 = origin - center
@@ -51,18 +51,23 @@ hitSphere center radius (MkRay origin dir) =
     c : Double = (dot oc oc) - (radius * radius)
     discriminant : Double = (b * b) - (4 * a * c)
   in
-    discriminant > 0
+    if discriminant < 0 then
+      -1
+    else
+      ((0 - b) - (sqrt discriminant)) / (2*a)
 
 rayColor : Ray -> Color
 rayColor r@(MkRay origin dir) =
-  case hitSphere [0,0,-1] 0.5 r of
-    True => [1, 0, 0]
-    False =>
-      let
-        unitDir : Vec3 = unitVector dir
-        t : Double = 0.5 * (getY unitDir) + 1
-      in
-        ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
+  let t : Double = hitSphere [0,0,-1] 0.5 r in
+  if t > 0 then
+    let N : Vec3 = unitVector ((rayAt r t) - [0, 0, -1]) in
+    0.5 <# [(getX N) + 1, (getY N) + 1, (getZ N) + 1]
+  else
+    let
+      unitDir : Vec3 = unitVector dir
+      t : Double = 0.5 * (getY unitDir) + 1
+    in
+      ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
 
 {- Render loop -}
 render : (h : Nat) -> (w : Nat) -> IO (Matrix h w RGB)
