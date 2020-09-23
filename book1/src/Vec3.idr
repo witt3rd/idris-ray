@@ -3,6 +3,8 @@ module Vec3
 import public Data.Vect
 import public Data.Matrix.Numeric
 
+import public Util
+
 %access public export
 
 {- Types -}
@@ -49,3 +51,40 @@ unitVector : Vec3 -> Vec3
 unitVector v =
   let l : Double = len v in
   if l == 0.0 then v else map (/ l) v
+
+random : Eff Vec3 [RND]
+random = pure $ [!randomUnitDouble, !randomUnitDouble, !randomUnitDouble]
+
+randomIn : (min : Double) -> (max : Double) -> Eff Vec3 [RND]
+randomIn min max =
+  pure $ [!(randomDouble min max), !(randomDouble min max), !(randomDouble min max)]
+
+-- use the rejection method: pick a point in the unit cube, test that it falls in within the unit sphere
+randomInUnitSphereR : Eff Vec3 [RND]
+randomInUnitSphereR =
+  let
+    p : Vec3 = !(randomIn (-1) 1)
+    l : Double = lenSq p
+  in
+    if p >= 1 then randomInUnitSphereR else pure p
+
+-- pick points on the unit ball and scale them
+randomInUnitSphere : Eff Vec3 [RND]
+randomInUnitSphere =
+  let
+    a : Double = !(randomDouble 0 (2 * pi))
+    z : Double = !(randomDouble (-1) 1)
+    r : Double = sqrt (1 - (z * z))
+    p : Vec3 = [r * (cos a), r * (sin a), z]
+  in
+    pure p
+
+randomInHemisphere : (normal : Vec3) -> Eff Vec3 [RND]
+randomInHemisphere normal =
+  let
+    inUnitSphere : Vec3 = !randomInUnitSphereR
+  in
+    if (dot inUnitSphere normal) > 0 then
+      pure inUnitSphere
+    else
+      pure (-inUnitSphere)

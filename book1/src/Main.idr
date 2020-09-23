@@ -1,5 +1,7 @@
 module Main
 
+import Debug.Trace
+
 import Camera
 import PPM
 import Ray
@@ -32,6 +34,9 @@ camera = newCamera aspectRatio origin
 samplesPerPixel : Nat
 samplesPerPixel = 100
 
+maxDepth : Nat
+maxDepth = 50
+
 {- World -}
 s1 : Sphere
 s1 = MkSphere [0, 0, -1] 0.5
@@ -43,16 +48,21 @@ world : List Sphere
 world = [s1, s2]
 
 {- Helpers -}
-rayColor : Hittable a => Ray -> List a -> Color
-rayColor ray@(MkRay origin dir) world =
-  case closestHit ray 0 infinity world of
-    Just (MkHit _ normal _ _) => 0.5 <# (normal + [1, 1, 1])
+rayColor : Hittable a => Ray -> List a -> (depth : Nat) -> Eff Color [RND]
+rayColor _ _ Z = pure [0, 0, 0] -- ray bounce limit, no more light is gathered
+rayColor ray@(MkRay origin dir) world (S depth) =
+  case closestHit ray 0.001 infinity world of
+    Just (MkHit point normal _ _) =>
+      let
+        target : Point3 = point + !(randomInHemisphere normal)
+      in
+        pure $ 0.5 <# !(rayColor (MkRay point (target - point)) world depth)
     Nothing =>
       let
         unitDir : Vec3 = unitVector dir
         t : Double = 0.5 * (getY unitDir) + 1
       in
-        ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
+        pure $ ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
 
 {- Render loop -}
 render : (h : Nat) -> (w : Nat) -> Eff (Matrix h w RGB) [RND]
@@ -65,7 +75,7 @@ render h w = sweepV h
         u : Double = (x + !randomUnitDouble) / (cast (minus w 1))
         v : Double = (y + !randomUnitDouble) / (cast (minus h 1))
         ray : Ray = getRay camera u v
-        color : Color = rayColor ray world
+        color : Color = !(rayColor ray world maxDepth)
       in
         pure $ color + !(sample x y k)
 
@@ -80,7 +90,9 @@ render h w = sweepV h
 
     sweepV : (j : Nat) -> Eff (Matrix j w RGB) [RND]
     sweepV Z = pure (Nil)
-    sweepV (S j) = pure $ !(sweepH w j) :: !(sweepV j)
+    sweepV (S j) = do
+      trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
+      pure $ !(sweepH w j) :: !(sweepV j)
 
 main : IO ()
 main = do

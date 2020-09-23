@@ -37,3 +37,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Adding a Sphere](05_Adding_a_Sphere.md)
 - [Surface Normals and Multiple Objects](06_Surface_Normals_and_Multiple_Objects.md)
 - [Antialiasing](07_Antialiasing.md)
+- [Diffuse Materials](08_Diffuse_Materials.md)

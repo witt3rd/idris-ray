@@ -292,7 +292,9 @@ render h w = sweepV h
 
     sweepV : (j : Nat) -> Eff (Matrix j w RGB) [RND]
     sweepV Z = pure (Nil)
-    sweepV (S j) = pure $ !(sweepH w j) :: !(sweepV j)
+    sweepV (S j) = do
+      trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
+      pure $ !(sweepH w j) :: !(sweepV j)
 ```
 
 Because we are now calling a effect-ful function, we need to change `main` to call it using `runPure`:
