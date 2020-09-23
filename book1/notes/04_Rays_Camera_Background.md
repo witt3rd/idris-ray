@@ -176,7 +176,7 @@ Lastly, let's update our `main` function to use the constants we defined at the 
 ```idris
 main : IO ()
 main = do
-  putStrLn "Rendring..."
+  putStrLn "Rendering..."
   image <- render imageHeight imageWidth
   savePPM "test.ppm" image
   putStrLn "Done!"
