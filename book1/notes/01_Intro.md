@@ -42,3 +42,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Dielectrics](10_Dielectrics.md)
 - [Positionable Camera](11_Positionable_Camera.md)
 - [Defocus Blur](12_Defocus_Blur.md)
+- [Final Render](13_Final_Render.md)
