@@ -1,5 +1,7 @@
 module Main
 
+import Debug.Trace
+
 import Camera
 import PPM
 import Ray
@@ -80,7 +82,9 @@ render h w = sweepV h
 
     sweepV : (j : Nat) -> Eff (Matrix j w RGB) [RND]
     sweepV Z = pure (Nil)
-    sweepV (S j) = pure $ !(sweepH w j) :: !(sweepV j)
+    sweepV (S j) = do
+      trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
+      pure $ !(sweepH w j) :: !(sweepV j)
 
 main : IO ()
 main = do
