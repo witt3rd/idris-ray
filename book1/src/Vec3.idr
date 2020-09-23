@@ -39,7 +39,22 @@ getZ = index zIdx
 
 {- Functions -}
 dot : Vec3 -> Vec3 -> Double
-dot a b = sum $ zipWith (*) a b
+dot u v = sum $ zipWith (*) u v
+
+cross : Vec3 -> Vec3 -> Vec3
+cross u v =
+  let
+    u0 : Double = getX u
+    u1 : Double = getY u
+    u2 : Double = getZ u
+    v0 : Double = getX v
+    v1 : Double = getY v
+    v2 : Double = getZ v
+  in
+    [u1 * v2 - u2 * v1
+    ,u2 * v0 - u0 * v2
+    ,u0 * v1 - u1 * v0
+    ]
 
 lenSq : Vec3 -> Double
 lenSq v = dot v v

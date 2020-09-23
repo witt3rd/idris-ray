@@ -39,8 +39,8 @@ class camera {
 We can modify the camera's smart constructor to accept the vertical field-of-view and calculate the viewport height in `Camera.idr`:
 
 ```idris
-newCamera : (fvof : Double) -> (aspectRatio : Double) -> (origin : Vec3) -> Camera
-newCamera fvof aspectRatio origin =
+newCamera : (origin : Vec3) -> (fvof : Double) -> (aspectRatio : Double) -> Camera
+newCamera origin fvof aspectRatio =
   let
     theta : Double = degToRad fvof
     h : Double = tan (theta/2.0)
@@ -141,4 +141,77 @@ class camera {
         vec3 horizontal;
         vec3 vertical;
 };
+```
+
+We need only update our smart constructor in `Camera.idr`:
+```idris
+newCamera : (origin : Point3) ->
+            (lookAt : Point3) ->
+            (vUp : Vec3) ->
+            (fvof : Double) ->
+            (aspectRatio : Double) ->
+            Camera
+newCamera origin fvof aspectRatio =
+  let
+    theta : Double = degToRad fvof
+    h : Double = tan (theta/2.0)
+    viewportHeight : Double = 2.0 * h
+    viewportWidth : Double = aspectRatio * viewportHeight
+
+    w : Vec3 = unitVector (origin - lookAt)
+    u : Vec3 = unitVector (cross vUp w)
+    v : Vec3 = cross w u
+
+    horizontal : Vec3 = viewportWidth <# u
+    vertical : Vec3 = viewportHeight <# v
+    lowerLeftCorner : Vec3 =
+      origin - (0.5 <# horizontal) - (0.5 <# vertical) - w
+  in
+    MkCamera origin lowerLeftCorner horizontal vertical
+```
+
+### Listing 64: Scene with alternate viewpoint
+
+```cpp
+hittable_list world;
+
+auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+auto material_left   = make_shared<dielectric>(1.5);
+auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+
+world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
+world.add(make_shared<sphere>(point3( 0.0,    0.0, -1.0),   0.5, material_center));
+world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0),   0.5, material_left));
+world.add(make_shared<sphere>(point3(-1.0,    0.0, -1.0), -0.45, material_left));
+world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right));
+
+camera cam(point3(-2,2,1), point3(0,0,-1), vec3(0,1,0), 90, aspect_ratio);
+```
+
+In `Main.idr`, we just reset things to the way the were before our wide-angle test and update the camera to specify its position and aim:
+
+```idris
+materialGround : Lambertian
+materialGround = MkLambertian [0.8, 0.8, 0.0]
+
+materialCenter : Lambertian
+materialCenter = MkLambertian [0.1, 0.2, 0.5]
+
+materialLeft : Dielectric
+materialLeft = MkDielectric 1.5
+
+materialRight : Metal
+materialRight = newMetal [0.8, 0.6, 0.2] 0
+
+world : List Sphere
+world = [
+    MkSphere [0, -100.5, -1] 100 materialGround
+  , MkSphere [0, 0, -1] 0.5 materialCenter
+  , MkSphere [-1, 0, -1] (-0.4) materialLeft
+  , MkSphere [1, 0, -1] 0.5 materialRight
+  ]
+
+camera : Camera
+camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 90 aspectRatio origin
 ```

@@ -11,18 +11,27 @@ record Camera where
   horizontal : Vec3
   vertical : Vec3
 
-newCamera : (fvof : Double) -> (aspectRatio : Double) -> (origin : Vec3) -> Camera
-newCamera fvof aspectRatio origin =
+newCamera : (origin : Point3) ->
+            (lookAt : Point3) ->
+            (vUp : Vec3) ->
+            (fvof : Double) ->
+            (aspectRatio : Double) ->
+            Camera
+newCamera origin lookAt vUp fvof aspectRatio =
   let
     theta : Double = degToRad fvof
     h : Double = tan (theta/2.0)
     viewportHeight : Double = 2.0 * h
     viewportWidth : Double = aspectRatio * viewportHeight
-    focalLength : Double = 1.0;
-    horizontal : Vec3 = [viewportWidth, 0, 0]
-    vertical : Vec3 = [0, viewportHeight, 0];
+
+    w : Vec3 = unitVector (origin - lookAt)
+    u : Vec3 = unitVector (cross vUp w)
+    v : Vec3 = cross w u
+
+    horizontal : Vec3 = viewportWidth <# u
+    vertical : Vec3 = viewportHeight <# v
     lowerLeftCorner : Vec3 =
-      origin - (0.5 <# horizontal) - (0.5 <# vertical) - [0, 0, focalLength]
+      origin - (0.5 <# horizontal) - (0.5 <# vertical) - w
   in
     MkCamera origin lowerLeftCorner horizontal vertical
 

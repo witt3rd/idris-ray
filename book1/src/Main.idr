@@ -25,11 +25,8 @@ imageHeight =
     cast ih
 
 {- Camera -}
-origin : Point3
-origin = [0, 0, 0]
-
 camera : Camera
-camera = newCamera 90 aspectRatio origin
+camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 90 aspectRatio
 
 samplesPerPixel : Nat
 samplesPerPixel = 100
@@ -38,41 +35,25 @@ maxDepth : Nat
 maxDepth = 50
 
 {- World -}
+materialGround : Lambertian
+materialGround = MkLambertian [0.8, 0.8, 0.0]
 
-R : Double
-R = cos (pi / 4.0)
+materialCenter : Lambertian
+materialCenter = MkLambertian [0.1, 0.2, 0.5]
 
-materialLeft : Lambertian
-materialLeft = MkLambertian [0, 0, 1]
+materialLeft : Dielectric
+materialLeft = MkDielectric 1.5
 
-materialRight : Lambertian
-materialRight = MkLambertian [1, 0, 0]
+materialRight : Metal
+materialRight = newMetal [0.8, 0.6, 0.2] 0
 
 world : List Sphere
 world = [
-    MkSphere [-R, 0, -1] R materialLeft
-  , MkSphere [ R, 0, -1] R materialRight
+    MkSphere [0, -100.5, -1] 100 materialGround
+  , MkSphere [0, 0, -1] 0.5 materialCenter
+  , MkSphere [-1, 0, -1] (-0.4) materialLeft
+  , MkSphere [1, 0, -1] 0.5 materialRight
   ]
-
--- materialGround : Lambertian
--- materialGround = MkLambertian [0.8, 0.8, 0.0]
-
--- materialCenter : Lambertian
--- materialCenter = MkLambertian [0.1, 0.2, 0.5]
-
--- materialLeft : Dielectric
--- materialLeft = MkDielectric 1.5
---
--- materialRight : Metal
--- materialRight = newMetal [0.8, 0.6, 0.2] 0
-
--- world : List Sphere
--- world = [
---     MkSphere [0, -100.5, -1] 100 materialGround
---   , MkSphere [0, 0, -1] 0.5 materialCenter
---   , MkSphere [-1, 0, -1] (-0.4) materialLeft
---   , MkSphere [1, 0, -1] 0.5 materialRight
---   ]
 
 {- Helpers -}
 rayColor : Hittable a => Ray -> List a -> (depth : Nat) -> Eff Color [RND]
