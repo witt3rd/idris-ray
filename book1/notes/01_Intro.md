@@ -40,3 +40,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Diffuse Materials](08_Diffuse_Materials.md)
 - [Metal](09_Metal.md)
 - [Dielectrics](10_Dielectrics.md)
+- [Positionable Camera](11_Positionable_Camera.md)

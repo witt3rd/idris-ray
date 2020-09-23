@@ -11,10 +11,12 @@ record Camera where
   horizontal : Vec3
   vertical : Vec3
 
-newCamera : (aspectRatio : Double) -> (origin : Vec3) -> Camera
-newCamera aspectRatio origin =
+newCamera : (fvof : Double) -> (aspectRatio : Double) -> (origin : Vec3) -> Camera
+newCamera fvof aspectRatio origin =
   let
-    viewportHeight : Double = 2.0
+    theta : Double = degToRad fvof
+    h : Double = tan (theta/2.0)
+    viewportHeight : Double = 2.0 * h
     viewportWidth : Double = aspectRatio * viewportHeight
     focalLength : Double = 1.0;
     horizontal : Vec3 = [viewportWidth, 0, 0]
