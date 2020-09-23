@@ -157,30 +157,46 @@ class dielectric : public material {
 };
 ```
 
-Let's update the scattering function of the dielectic material to include the reflection case:
+Let's take this opportunity to refactor the scattering function of the dielectric material, since there are now two distinct cases (reflection and refraction):
 
 ```idris
 scatterDielectric : Ray -> HitPoint -> Dielectric -> Eff (Maybe Scattering) [RND]
 scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDielectric refIdx) =
-  let
-    attenuation : Color = [1, 1, 1]
-    etaIOverEtaT : Double = if frontFace then (1 / refIdx) else refIdx
-    unitDir : Vec3 = unitVector dir
-    cos_theta : Double = min (dot (-unitDir) normal) 1
-    sin_theta : Double = sqrt (1 - (cos_theta * cos_theta))
-  in
-    if (etaIOverEtaT * sin_theta) > 1 then
+  if (etaIOverEtaT * sinTheta) > 1 then
+    pure scatterReflect
+  else
+    pure scatterRefract
+  where
+    attenuation : Color
+    attenuation = [1, 1, 1]
+
+    etaIOverEtaT : Double
+    etaIOverEtaT = if frontFace then (1 / refIdx) else refIdx
+
+    unitDir : Vec3
+    unitDir = unitVector dir
+
+    cosTheta : Double
+    cosTheta = min (dot (-unitDir) normal) 1
+
+    sinTheta : Double
+    sinTheta = sqrt (1 - (cosTheta * cosTheta))
+
+    scatterReflect : Maybe Scattering
+    scatterReflect =
       let
         reflected : Vec3 = reflect unitDir normal
         scattered : Ray = MkRay point reflected
       in
-        pure $ Just (MkScattering attenuation scattered)
-    else
+        Just (MkScattering attenuation scattered)
+
+    scatterRefract : Maybe Scattering
+    scatterRefract =
       let
         refracted : Vec3 = refract unitDir normal etaIOverEtaT
         scattered : Ray = MkRay point refracted
       in
-        pure $ Just (MkScattering attenuation scattered)
+        Just (MkScattering attenuation scattered)
 ```
 
 ### Listing 57: Scene with dielectric and shiny sphere
@@ -224,7 +240,16 @@ double schlick(double cosine, double ref_idx) {
 }
 ```
 
+We add this function to `Material.idr` within the dielectric section:
+
 ```idris
+schlick : (cosine : Double) -> (refIdx : Double) -> Double
+schlick cosine refIdx =
+  let
+    r0 : Double = (1 - refIdx) / (1 - refIdx)
+    r0' : Double = r0 * r0
+  in
+    r0 + ((1.0 - r0) * (pow (1.0 - cosine) 5.0))
 ```
 
 ### Listing 59: Full glass material
@@ -248,13 +273,13 @@ class dielectric : public material {
                 scattered = ray(rec.p, reflected);
                 return true;
             }
-            double reflect_prob = schlick(cos_theta, etai_over_etat);
-            if (random_double() < reflect_prob)
-            {
-                vec3 reflected = reflect(unit_direction, rec.normal);
-                scattered = ray(rec.p, reflected);
-                return true;
-            }
++             double reflect_prob = schlick(cos_theta, etai_over_etat);
++             if (random_double() < reflect_prob)
++             {
++                 vec3 reflected = reflect(unit_direction, rec.normal);
++                 scattered = ray(rec.p, reflected);
++                 return true;
++             }
             vec3 refracted = refract(unit_direction, rec.normal, etai_over_etat);
             scattered = ray(rec.p, refracted);
             return true;
@@ -265,7 +290,20 @@ class dielectric : public material {
 };
 ```
 
+Due to the refactoring we did in the previous step, this Schlick Approximation can easily be added:
+
 ```idris
+scatterDielectric : Ray -> HitPoint -> Dielectric -> Eff (Maybe Scattering) [RND]
+scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDielectric refIdx) =
+  if (etaIOverEtaT * sinTheta) > 1 then
+    pure scatterReflect
+  else
+    if !randomUnitDouble < (schlick cosTheta etaIOverEtaT) then
+      pure scatterReflect
+    else
+      pure scatterRefract
+  where
+    ...
 ```
 
 ## 10.5 Modeling a Hollow Glass Sphere

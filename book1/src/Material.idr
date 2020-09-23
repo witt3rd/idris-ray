@@ -52,31 +52,59 @@ Material Metal where
   scatter = scatterMetal
 
 {- Dielectric -}
+schlick : (cosine : Double) -> (refIdx : Double) -> Double
+schlick cosine refIdx =
+  let
+    r0 : Double = (1 - refIdx) / (1 - refIdx)
+    r0' : Double = r0 * r0
+  in
+    r0 + ((1.0 - r0) * (pow (1.0 - cosine) 5.0))
+
+
 record Dielectric where
   constructor MkDielectric
   refIdx : Double
 
 scatterDielectric : Ray -> HitPoint -> Dielectric -> Eff (Maybe Scattering) [RND]
 scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDielectric refIdx) =
-  let
-    attenuation : Color = [1, 1, 1]
-    etaIOverEtaT : Double = if frontFace then (1 / refIdx) else refIdx
-    unitDir : Vec3 = unitVector dir
-    cos_theta : Double = min (dot (-unitDir) normal) 1
-    sin_theta : Double = sqrt (1 - (cos_theta * cos_theta))
-  in
-    if (etaIOverEtaT * sin_theta) > 1 then
+  if (etaIOverEtaT * sinTheta) > 1 then
+    pure scatterReflect
+  else
+    if !randomUnitDouble < (schlick cosTheta etaIOverEtaT) then
+      pure scatterReflect
+    else
+      pure scatterRefract      
+  where
+    attenuation : Color
+    attenuation = [1, 1, 1]
+
+    etaIOverEtaT : Double
+    etaIOverEtaT = if frontFace then (1 / refIdx) else refIdx
+
+    unitDir : Vec3
+    unitDir = unitVector dir
+
+    cosTheta : Double
+    cosTheta = min (dot (-unitDir) normal) 1
+
+    sinTheta : Double
+    sinTheta = sqrt (1 - (cosTheta * cosTheta))
+
+    scatterReflect : Maybe Scattering
+    scatterReflect =
       let
         reflected : Vec3 = reflect unitDir normal
         scattered : Ray = MkRay point reflected
       in
-        pure $ Just (MkScattering attenuation scattered)
-    else
+        Just (MkScattering attenuation scattered)
+
+    scatterRefract : Maybe Scattering
+    scatterRefract =
       let
         refracted : Vec3 = refract unitDir normal etaIOverEtaT
         scattered : Ray = MkRay point refracted
       in
-        pure $ Just (MkScattering attenuation scattered)
+        Just (MkScattering attenuation scattered)
 
 Material Dielectric where
   scatter = scatterDielectric

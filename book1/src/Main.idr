@@ -54,7 +54,7 @@ world : List Sphere
 world = [
     MkSphere [0, -100.5, -1] 100 materialGround
   , MkSphere [0, 0, -1] 0.5 materialCenter
-  , MkSphere [-1, 0, -1] 0.5 materialLeft
+  , MkSphere [-1, 0, -1] (-0.4) materialLeft
   , MkSphere [1, 0, -1] 0.5 materialRight
   ]
 
