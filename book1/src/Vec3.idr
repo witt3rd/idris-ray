@@ -104,6 +104,14 @@ randomInHemisphere normal =
     else
       pure (-inUnitSphere)
 
+randomInUnitDiskR : Eff Vec3 [RND]
+randomInUnitDiskR =
+  let
+    p : Vec3 = [!(randomDouble (-1) 1), !(randomDouble (-1) 1), 0]
+    l : Double = lenSq p
+  in
+    if p >= 1 then randomInUnitDiskR else pure p
+
 reflect : (v : Vec3) -> (n : Vec3) -> Vec3
 reflect v n = v - ((2 * (dot v n)) <# n)
 

@@ -218,7 +218,7 @@ camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 90 aspectRatio origin
 
 #### Image 18: A distant view
 
-![A distant view](images/Image_17.png)
+![A distant view](images/Image_18.png)
 
 ###
 

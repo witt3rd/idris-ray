@@ -25,8 +25,23 @@ imageHeight =
     cast ih
 
 {- Camera -}
+lookFrom : Point3
+lookFrom = [3, 3, 2]
+
+lookAt : Point3
+lookAt = [0, 0, -1]
+
+vUp : Vec3
+vUp = [0, 1, 0]
+
+distFocus : Double
+distFocus = len (lookFrom - lookAt)
+
+aperture : Double
+aperture = 2.0
+
 camera : Camera
-camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 20 aspectRatio
+camera = newCamera lookFrom lookAt vUp 20 aspectRatio aperture distFocus
 
 samplesPerPixel : Nat
 samplesPerPixel = 100
@@ -82,7 +97,7 @@ render h w = sweepV h
       let
         u : Double = (x + !randomUnitDouble) / (cast (minus w 1))
         v : Double = (y + !randomUnitDouble) / (cast (minus h 1))
-        ray : Ray = getRay camera u v
+        ray : Ray = !(getRay camera u v)
         color : Color = !(rayColor ray world maxDepth)
       in
         pure $ color + !(sample x y k)

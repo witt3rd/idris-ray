@@ -41,3 +41,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Metal](09_Metal.md)
 - [Dielectrics](10_Dielectrics.md)
 - [Positionable Camera](11_Positionable_Camera.md)
+- [Defocus Blur](12_Defocus_Blur.md)
