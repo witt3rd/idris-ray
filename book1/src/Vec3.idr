@@ -88,3 +88,6 @@ randomInHemisphere normal =
       pure inUnitSphere
     else
       pure (-inUnitSphere)
+
+reflect : (v : Vec3) -> (n : Vec3) -> Vec3
+reflect v n = v - ((2 * (dot v n)) <# n)

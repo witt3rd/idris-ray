@@ -3,8 +3,8 @@ module Main
 import Debug.Trace
 
 import Camera
+import Hit
 import PPM
-import Ray
 import Sphere
 import Util
 
@@ -38,25 +38,36 @@ maxDepth : Nat
 maxDepth = 50
 
 {- World -}
-s1 : Sphere
-s1 = MkSphere [0, 0, -1] 0.5
+materialGround : Lambertian
+materialGround = MkLambertian [0.8, 0.8, 0.0]
 
-s2 : Sphere
-s2 = MkSphere [0, -100.5, -1] 100
+materialCenter : Lambertian
+materialCenter = MkLambertian [0.7, 0.3, 0.3]
+
+materialLeft : Metal
+materialLeft = newMetal [0.8, 0.8, 0.8] 0.3
+
+materialRight : Metal
+materialRight = newMetal [0.8, 0.6, 0.2] 1
 
 world : List Sphere
-world = [s1, s2]
+world = [
+    MkSphere [0, -100.5, -1] 100 materialGround
+  , MkSphere [0, 0, -1] 0.5 materialCenter
+  , MkSphere [-1, 0, -1] 0.5 materialLeft
+  , MkSphere [1, 0, -1] 0.5 materialRight
+  ]
 
 {- Helpers -}
 rayColor : Hittable a => Ray -> List a -> (depth : Nat) -> Eff Color [RND]
 rayColor _ _ Z = pure [0, 0, 0] -- ray bounce limit, no more light is gathered
 rayColor ray@(MkRay origin dir) world (S depth) =
-  case closestHit ray 0.001 infinity world of
-    Just (MkHit point normal _ _) =>
-      let
-        target : Point3 = point + !(randomInHemisphere normal)
-      in
-        pure $ 0.5 <# !(rayColor (MkRay point (target - point)) world depth)
+  case closestHit ray 0 infinity world of
+    Just (MkHit hitPoint material) =>
+      case !(scatter ray hitPoint material) of
+        Just (MkScattering attenuation scattered) =>
+          pure $ attenuation * !(rayColor scattered world depth)
+        Nothing => pure $ [0, 0, 0]
     Nothing =>
       let
         unitDir : Vec3 = unitVector dir

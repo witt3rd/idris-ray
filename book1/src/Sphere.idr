@@ -4,15 +4,18 @@ import public Hit
 
 %access public export
 
-record Sphere where
-  constructor MkSphere
-  center : Point3
-  radius : Double
+data Sphere : Type where
+  MkSphere :
+    Material m =>
+    (center : Point3) ->
+    (radius : Double) ->
+    (material : m) ->
+    Sphere
 
 %name Sphere sphere, sphere1, sphere2
 
 Hittable Sphere where
-  hit ray@(MkRay origin dir) tMin tMax (MkSphere center radius) =
+  hit ray@(MkRay origin dir) tMin tMax sphere@(MkSphere center radius material) =
     let
       oc : Vec3 = origin - center
       a : Double = lenSq dir
@@ -35,6 +38,6 @@ Hittable Sphere where
             point : Point3 = rayAt ray t
             outwardNormal : Vec3 = (1.0 / radius) <# (point - center)
           in
-            Just (newHit ray t point outwardNormal)
+            Just (newHit ray t point outwardNormal material)
         else
           Nothing
