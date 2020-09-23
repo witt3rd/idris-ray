@@ -26,7 +26,7 @@ imageHeight =
 
 {- Camera -}
 camera : Camera
-camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 90 aspectRatio
+camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 20 aspectRatio
 
 samplesPerPixel : Nat
 samplesPerPixel = 100

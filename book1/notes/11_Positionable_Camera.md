@@ -215,3 +215,23 @@ world = [
 camera : Camera
 camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 90 aspectRatio origin
 ```
+
+#### Image 18: A distant view
+
+![A distant view](images/Image_17.png)
+
+###
+
+```cpp
+camera cam(point3(-2,2,1), point3(0,0,-1), vup, 20, aspect_ratio);
+```
+
+In `Main.idr`:
+
+```idris
+camera = newCamera [-2, 2, 1] [0, 0, -1] [0, 1, 0] 20 aspectRatio
+```
+
+#### Image 19: Zooming in
+
+![Zooming in](images/Image_19.png)
