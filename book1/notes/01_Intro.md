@@ -35,3 +35,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Vectors and Colors](03_Vectors_and_Color.md)
 - [Rays, a Simple Camera, and Background](04_Rays_Camera_Background.md)
 - [Adding a Sphere](05_Adding_a_Sphere.md)
+- [Surface Normals and Multiple Objects](06_Surface_Normals_and_Multiple_Objects.md)
