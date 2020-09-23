@@ -1,6 +1,6 @@
 # 10. Dielectrics
 
-## 10.1 Refraction
+## 10.1-2 Refraction and Snell's Law
 
 ### Listing 51: Refraction function
 
@@ -26,7 +26,7 @@ refract uv  n etaIOverEtaT =
     perp + parallel
 ```
 
-## Listing 52: Dielectric material class that always refracts
+### Listing 52: Dielectric material class that always refracts
 
 ```cpp
 class dielectric : public material {
@@ -72,7 +72,7 @@ Material Dielectric where
   scatter = scatterDielectric
 ```
 
-## Listing 53: Changing left and center spheres to glass
+### Listing 53: Changing left and center spheres to glass
 
 ```cpp
 auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
@@ -91,10 +91,15 @@ materialLeft : Dielectric
 materialLeft = MkDielectric 1.5
 ```
 
-[Glass sphere that always refracts](10_image_14.png)
+#### Image 14: Glass sphere that always refracts
 
-## Listing 54: Determining if the ray can refract
+![Glass sphere that always refracts](images/Image_14.png)
 
+## 10.3 Total Internal reflection
+
+### Listing 54: Determining if the ray can refract
+
+```cpp
 if (etai_over_etat * sin_theta > 1.0) {
     // Must Reflect
     ...
@@ -102,9 +107,11 @@ if (etai_over_etat * sin_theta > 1.0) {
     // Can Refract
     ...
 }
+```
 
-## Listing 55: Determining if the ray can refract
+### Listing 55: Determining if the ray can refract
 
+```cpp
 double cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0);
 double sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
@@ -115,9 +122,11 @@ if (etai_over_etat * sin_theta > 1.0) {
     // Can Refract
     ...
 }
+```
 
-## Listing 56: Dielectric material class with reflection
+### Listing 56: Dielectric material class with reflection
 
+```cpp
 class dielectric : public material {
     public:
         dielectric(double ri) : ref_idx(ri) {}
@@ -146,17 +155,66 @@ class dielectric : public material {
     public:
         double ref_idx;
 };
+```
 
-## Listing 57: Scene with dielectric and shiny sphere
+Let's update the scattering function of the dielectic material to include the reflection case:
 
+```idris
+scatterDielectric : Ray -> HitPoint -> Dielectric -> Eff (Maybe Scattering) [RND]
+scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDielectric refIdx) =
+  let
+    attenuation : Color = [1, 1, 1]
+    etaIOverEtaT : Double = if frontFace then (1 / refIdx) else refIdx
+    unitDir : Vec3 = unitVector dir
+    cos_theta : Double = min (dot (-unitDir) normal) 1
+    sin_theta : Double = sqrt (1 - (cos_theta * cos_theta))
+  in
+    if (etaIOverEtaT * sin_theta) > 1 then
+      let
+        reflected : Vec3 = reflect unitDir normal
+        scattered : Ray = MkRay point reflected
+      in
+        pure $ Just (MkScattering attenuation scattered)
+    else
+      let
+        refracted : Vec3 = refract unitDir normal etaIOverEtaT
+        scattered : Ray = MkRay point refracted
+      in
+        pure $ Just (MkScattering attenuation scattered)
+```
+
+### Listing 57: Scene with dielectric and shiny sphere
+
+```cpp
 auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
 auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
 auto material_left   = make_shared<dielectric>(1.5);
 auto material_right  = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+```
 
-[Glass sphere that sometimes refracts](10_image_15.png)
+Update the world in `Main.idr`:
 
-## Listing 58: Schlick approximation
+```idris
+materialGround : Lambertian
+materialGround = MkLambertian [0.8, 0.8, 0.0]
+
+materialCenter : Lambertian
+materialCenter = MkLambertian [0.1, 0.2, 0.5]
+
+materialLeft : Dielectric
+materialLeft = MkDielectric 1.5
+
+materialRight : Metal
+materialRight = newMetal [0.8, 0.6, 0.2] 0
+```
+
+#### Image 15: Glass sphere that sometimes refracts
+
+![Glass sphere that sometimes refracts](images/Image_15.png)
+
+## 10.4 Schlick Approximation
+
+### Listing 58: Schlick approximation
 
 ```cpp
 double schlick(double cosine, double ref_idx) {
@@ -169,7 +227,7 @@ double schlick(double cosine, double ref_idx) {
 ```idris
 ```
 
-## Listing 59: Full glass material
+### Listing 59: Full glass material
 
 ```cpp
 class dielectric : public material {
@@ -210,7 +268,9 @@ class dielectric : public material {
 ```idris
 ```
 
-## Listing 60: Scene with hollow glass sphere
+## 10.5 Modeling a Hollow Glass Sphere
+
+### Listing 60: Scene with hollow glass sphere
 
 ```cpp
 world.add(make_shared<sphere>(point3( 0.0, -100.5, -1.0), 100.0, material_ground));
@@ -223,8 +283,6 @@ world.add(make_shared<sphere>(point3( 1.0,    0.0, -1.0),   0.5, material_right)
 ```idris
 ```
 
-## Final Render
+#### Image 16: A hallow glass sphere
 
-A hallow glass sphere:
-
-![A hallow glass sphere](images/10_Final.png)
+![A hallow glass sphere](images/images/Image_16.png)

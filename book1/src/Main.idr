@@ -41,14 +41,14 @@ maxDepth = 50
 materialGround : Lambertian
 materialGround = MkLambertian [0.8, 0.8, 0.0]
 
-materialCenter : Dielectric
-materialCenter = MkDielectric 1.5
+materialCenter : Lambertian
+materialCenter = MkLambertian [0.1, 0.2, 0.5]
 
 materialLeft : Dielectric
 materialLeft = MkDielectric 1.5
 
 materialRight : Metal
-materialRight = newMetal [0.8, 0.6, 0.2] 1
+materialRight = newMetal [0.8, 0.6, 0.2] 0
 
 world : List Sphere
 world = [

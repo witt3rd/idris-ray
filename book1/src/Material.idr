@@ -62,10 +62,21 @@ scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDi
     attenuation : Color = [1, 1, 1]
     etaIOverEtaT : Double = if frontFace then (1 / refIdx) else refIdx
     unitDir : Vec3 = unitVector dir
-    refracted : Vec3 = refract unitDir normal etaIOverEtaT
-    scattered : Ray = MkRay point refracted
+    cos_theta : Double = min (dot (-unitDir) normal) 1
+    sin_theta : Double = sqrt (1 - (cos_theta * cos_theta))
   in
-    pure $ Just (MkScattering attenuation scattered)
+    if (etaIOverEtaT * sin_theta) > 1 then
+      let
+        reflected : Vec3 = reflect unitDir normal
+        scattered : Ray = MkRay point reflected
+      in
+        pure $ Just (MkScattering attenuation scattered)
+    else
+      let
+        refracted : Vec3 = refract unitDir normal etaIOverEtaT
+        scattered : Ray = MkRay point refracted
+      in
+        pure $ Just (MkScattering attenuation scattered)
 
 Material Dielectric where
   scatter = scatterDielectric
