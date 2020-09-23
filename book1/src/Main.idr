@@ -1,5 +1,6 @@
 module Main
 
+import Camera
 import PPM
 import Ray
 import Sphere
@@ -22,26 +23,14 @@ imageHeight =
     cast ih
 
 {- Camera -}
-viewportHeight : Double
-viewportHeight = 2.0
-
-viewportWidth : Double
-viewportWidth = aspectRatio * viewportHeight
-
-focalLength : Double
-focalLength = 1.0;
-
 origin : Point3
 origin = [0, 0, 0]
 
-horizontal : Vec3
-horizontal = [viewportWidth, 0, 0]
+camera : Camera
+camera = newCamera aspectRatio origin
 
-vertical : Vec3
-vertical = [0, viewportHeight, 0];
-
-lowerLeftCorner : Vec3
-lowerLeftCorner = origin - (0.5 <# horizontal) - (0.5 <# vertical) - [0, 0, focalLength]
+samplesPerPixel : Nat
+samplesPerPixel = 100
 
 {- World -}
 s1 : Sphere
@@ -66,32 +55,36 @@ rayColor ray@(MkRay origin dir) world =
         ((1.0 - t) <# [1, 1, 1]) + (t <# [0.5, 0.7, 1])
 
 {- Render loop -}
-render : (h : Nat) -> (w : Nat) -> IO (Matrix h w RGB)
-render h w = mkRows h
+render : (h : Nat) -> (w : Nat) -> Eff (Matrix h w RGB) [RND]
+render h w = sweepV h
   where
-    mkCols : (i : Nat) -> (j : Nat) -> Vect i RGB
-    mkCols Z _ = Nil
-    mkCols (S i) j =
+    sample : (x : Double) -> (y : Double) -> (samples : Nat) -> Eff Color [RND]
+    sample _ _ Z = pure [0, 0, 0]
+    sample x y (S k) =
+      let
+        u : Double = (x + !randomUnitDouble) / (cast (minus w 1))
+        v : Double = (y + !randomUnitDouble) / (cast (minus h 1))
+        ray : Ray = getRay camera u v
+        color : Color = rayColor ray world
+      in
+        pure $ color + !(sample x y k)
+
+    sweepH : (i : Nat) -> (j : Nat) -> Eff (Vect i RGB) [RND]
+    sweepH Z _ = pure Nil
+    sweepH (S i) j =
       let
         i' : Nat = minus w (plus i 1)
-        u : Double = (cast i') / (cast (minus w 1))
-        v : Double = (cast j) / (cast (minus h 1))
-        uh : Vec3 = u <# horizontal
-        vv : Vec3 = v <# vertical
-        r : Ray = MkRay origin (lowerLeftCorner + uh + vv - origin)
-        c : Color = rayColor r world
+        color : Color = !(sample (cast i') (cast j) samplesPerPixel)
       in
-        (toRGB c) :: mkCols i j
+        pure $ (toRGB color samplesPerPixel) :: !(sweepH i j)
 
-    mkRows : (j : Nat) -> IO (Matrix j w RGB)
-    mkRows Z = pure (Nil)
-    mkRows (S j) = do
-      rows <- mkRows j
-      pure ((mkCols w j) :: rows)
+    sweepV : (j : Nat) -> Eff (Matrix j w RGB) [RND]
+    sweepV Z = pure (Nil)
+    sweepV (S j) = pure $ !(sweepH w j) :: !(sweepV j)
 
 main : IO ()
 main = do
-  putStrLn "Rendring..."
-  image <- render imageHeight imageWidth
+  putStrLn "Rendering..."
+  let image = runPure $ render imageHeight imageWidth
   savePPM "test.ppm" image
   putStrLn "Done!"

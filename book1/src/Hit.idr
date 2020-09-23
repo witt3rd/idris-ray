@@ -28,8 +28,8 @@ closestHit : Hittable a => Ray -> (tMin : Double) -> (tMax : Double) -> List a -
 closestHit _ _ _ [] = Nothing
 closestHit ray tMin tMax (x :: xs) =
   case hit ray tMin tMax x of
-      Nothing => closestHit ray tMin tMax xs
-      Just xHit =>
-        case closestHit ray tMin (t xHit) xs of
-          Nothing => Just xHit
-          Just xsHit => Just xsHit
+    Nothing => closestHit ray tMin tMax xs
+    Just xHit =>
+      case closestHit ray tMin (t xHit) xs of
+        Nothing => Just xHit
+        Just xsHit => Just xsHit

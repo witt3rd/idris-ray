@@ -9,8 +9,12 @@ import public Data.Matrix.Numeric
 Vec3 : Type
 Vec3 = Vect 3 Double
 
+%name Vec3 vec, vec1, vec2
+
 Point3 : Type
 Point3 = Vec3
+
+%name Point3 point, point1, point2
 
 {- Accessors -}
 xIdx : Fin 3
