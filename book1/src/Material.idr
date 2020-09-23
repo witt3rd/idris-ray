@@ -50,3 +50,22 @@ scatterMetal (MkRay origin dir) (MkHitPoint point normal _ _) (MkMetal albedo fu
 
 Material Metal where
   scatter = scatterMetal
+
+{- Dielectric -}
+record Dielectric where
+  constructor MkDielectric
+  refIdx : Double
+
+scatterDielectric : Ray -> HitPoint -> Dielectric -> Eff (Maybe Scattering) [RND]
+scatterDielectric (MkRay origin dir) (MkHitPoint point normal frontFace _) (MkDielectric refIdx) =
+  let
+    attenuation : Color = [1, 1, 1]
+    etaIOverEtaT : Double = if frontFace then (1 / refIdx) else refIdx
+    unitDir : Vec3 = unitVector dir
+    refracted : Vec3 = refract unitDir normal etaIOverEtaT
+    scattered : Ray = MkRay point refracted
+  in
+    pure $ Just (MkScattering attenuation scattered)
+
+Material Dielectric where
+  scatter = scatterDielectric

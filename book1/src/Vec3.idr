@@ -91,3 +91,12 @@ randomInHemisphere normal =
 
 reflect : (v : Vec3) -> (n : Vec3) -> Vec3
 reflect v n = v - ((2 * (dot v n)) <# n)
+
+refract :(uv : Vec3) -> (n : Vec3) -> (etaIOverEtaT : Double) -> Vec3
+refract uv  n etaIOverEtaT =
+  let
+    cosTheta : Double = dot (-uv) n
+    perp : Vec3 = etaIOverEtaT <# (uv + (cosTheta <# n))
+    parallel : Vec3 = (-(sqrt (abs (1 - (lenSq perp))))) <# n
+  in
+    perp + parallel

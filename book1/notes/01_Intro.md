@@ -39,3 +39,4 @@ Follow the same outline of the book, covering the topics and porting to Idris.
 - [Antialiasing](07_Antialiasing.md)
 - [Diffuse Materials](08_Diffuse_Materials.md)
 - [Metal](09_Metal.md)
+- [Dielectrics](10_Dielectrics.md)

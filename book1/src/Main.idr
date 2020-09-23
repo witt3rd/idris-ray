@@ -41,11 +41,11 @@ maxDepth = 50
 materialGround : Lambertian
 materialGround = MkLambertian [0.8, 0.8, 0.0]
 
-materialCenter : Lambertian
-materialCenter = MkLambertian [0.7, 0.3, 0.3]
+materialCenter : Dielectric
+materialCenter = MkDielectric 1.5
 
-materialLeft : Metal
-materialLeft = newMetal [0.8, 0.8, 0.8] 0.3
+materialLeft : Dielectric
+materialLeft = MkDielectric 1.5
 
 materialRight : Metal
 materialRight = newMetal [0.8, 0.6, 0.2] 1
