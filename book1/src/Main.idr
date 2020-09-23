@@ -1,5 +1,7 @@
 module Main
 
+import Debug.Trace
+
 import PPM
 import Ray
 
@@ -70,6 +72,7 @@ render h w = sweepV h
     sweepV : (j : Nat) -> IO (Matrix j w RGB)
     sweepV Z = pure (Nil)
     sweepV (S j) = do
+      trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
       rows <- sweepV j
       pure ((sweepH w j) :: rows)
 

@@ -224,3 +224,16 @@ idris --build ray.ipkg
 
     std::cerr << "\nDone.\n";
 ```
+
+Since Idris is purely functional, it wouldn't do us much good to simply `putStrLn` a message, since our program would fully run, then dump all the messages to the console at once.  Instead, we can use the `trace` function from the `Debug.Trace` module.  In `Main.idr`:
+
+```idris
+import Debug.Trace
+
+...
+
+    sweepV (S j) = do
+      trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
+      rows <- sweepV j
+      pure ((sweepH w j) :: rows)
+```
