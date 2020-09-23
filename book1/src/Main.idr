@@ -66,11 +66,11 @@ rayColor r@(MkRay origin dir) =
 
 {- Render loop -}
 render : (h : Nat) -> (w : Nat) -> IO (Matrix h w RGB)
-render h w = mkRows h
+render h w = sweepV h
   where
-    mkCols : (i : Nat) -> (j : Nat) -> Vect i RGB
-    mkCols Z _ = Nil
-    mkCols (S i) j =
+    sweepH : (i : Nat) -> (j : Nat) -> Vect i RGB
+    sweepH Z _ = Nil
+    sweepH (S i) j =
       let
         i' : Nat = minus w (plus i 1)
         u : Double = (cast i') / (cast (minus w 1))
@@ -80,17 +80,17 @@ render h w = mkRows h
         r : Ray = MkRay origin (lowerLeftCorner + uh + vv - origin)
         c : Color = rayColor r
       in
-        (toRGB c) :: mkCols i j
+        (toRGB c) :: sweepH i j
 
-    mkRows : (j : Nat) -> IO (Matrix j w RGB)
-    mkRows Z = pure (Nil)
-    mkRows (S j) = do
-      rows <- mkRows j
-      pure ((mkCols w j) :: rows)
+    sweepV : (j : Nat) -> IO (Matrix j w RGB)
+    sweepV Z = pure (Nil)
+    sweepV (S j) = do
+      rows <- sweepV j
+      pure ((sweepH w j) :: rows)
 
 main : IO ()
 main = do
-  putStrLn "Rendring..."
+  putStrLn "Rendering..."
   image <- render imageHeight imageWidth
   savePPM "test.ppm" image
   putStrLn "Done!"
