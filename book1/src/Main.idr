@@ -1,5 +1,7 @@
 module Main
 
+import Debug.Trace
+
 {- Image -}
 
 imageWidth : Nat
@@ -38,5 +40,6 @@ main =
     renderRows : (j : Nat) -> IO (Either FileError ())
     renderRows Z = pure (Right ())
     renderRows (S j) = do
+      _ <- trace ("Scanlines remaining: " ++ (show (j + 1))) $ pure ()
       _ <- renderCells imageWidth j
       renderRows j
