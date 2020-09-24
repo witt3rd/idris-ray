@@ -1,0 +1,9 @@
+package ray
+
+pkgs = contrib
+
+sourcedir = src
+
+main = Main
+
+executable = ray
