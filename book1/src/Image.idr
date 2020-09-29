@@ -16,7 +16,7 @@ RGB8Image : (w : Nat) -> (h : Nat) -> Type
 RGB8Image h w = Image w h RGB8
 
 RGBdImage : (w : Nat) -> (h : Nat) -> Type
-RGBdImage h w = Matrix h w RGBd
+RGBdImage h w = Image w h RGBd
 
 {- Image conversions -}
 
